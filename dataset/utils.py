@@ -26,9 +26,10 @@ def resize(frames, dynamic_det, det_length,
         det_num = 1
     face_region = []
     # 获取人脸区域
+    detector = MTCNN()
     for idx in range(det_num):
         if crop_face:
-            face_region.append(facial_detection(frames[det_length * idx],
+            face_region.append(facial_detection(detector, frames[det_length * idx],
                                                 larger_box, larger_box_size))
         else:  # 不截取
             face_region.append([0, 0, frames.shape[1], frames.shape[2]])
@@ -45,37 +46,39 @@ def resize(frames, dynamic_det, det_length,
             reference_index = 0
         if crop_face:
             face_region = face_region_all[reference_index]
-            frame = frame[max(face_region[1], 0):min(face_region[1] + face_region[3], frame.shape[0]),
-                    max(face_region[0], 0):min(face_region[0] + face_region[2], frame.shape[1])]
+            frame = frame[max(face_region[1], 0):min(face_region[3], frame.shape[0]),
+                          max(face_region[0], 0):min(face_region[2], frame.shape[1])]
         resize_frames[i] = cv.resize(frame, (w + 4, h + 4),
                                      interpolation=cv.INTER_CUBIC)[2: w + 2, 2: h + 2, :]
     return resize_frames
 
 
-def facial_detection(frame, larger_box=False, larger_box_size=1.0):
+def facial_detection(detector, frame, larger_box=False, larger_box_size=1.0):
     """
     利用 MTCNN 检测人脸区域
+    :param detector:
     :param frame:
     :param larger_box: 是否放大 bbox, 处理运动情况
     :param larger_box_size:
     """
-    detector = MTCNN()
     face_zone = detector.detect_faces(frame)
     if len(face_zone) < 1:
         print("Warning: No Face Detected!")
-        result = [0, 0, frame.shape[0], frame.shape[1]]
+        return [0, 0, frame.shape[0], frame.shape[1]]
     else:
         if len(face_zone) >= 2:
             print("Warning: More than one faces are detected(Only cropping the biggest one.)")
         result = face_zone[0]['box']
         result[2] += result[0]
         result[3] += result[1]
+    h = result[3] - result[1]
+    w = result[2] - result[0]
     if larger_box:
         print("Larger Bounding Box")
-        result[0] = max(0, result[0] - (larger_box_size - 1.0) / 2 * result[2])
-        result[1] = max(0, result[1] - (larger_box_size - 1.0) / 2 * result[3])
-        result[2] = larger_box_size * result[2]
-        result[3] = larger_box_size * result[3]
+        result[0] = round(max(0, result[0] + (1. - larger_box_size) / 2 * w))
+        result[1] = round(max(0, result[1] + (1. - larger_box_size) / 2 * h))
+        result[2] = round(max(0, result[0] + (1. + larger_box_size) / 2 * w))
+        result[3] = round(max(0, result[1] + (1. + larger_box_size) / 2 * h))
     return result
 
 

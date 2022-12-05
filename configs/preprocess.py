@@ -3,7 +3,7 @@ class FrameTrain:
     input_path = "D:\\papers\\Video\\vipl_test"
     record_path = "./train_record.csv"
 
-    MODIFY = False
+    MODIFY = True
     W = 128
     H = 128
     DYNAMIC_DETECTION = True
