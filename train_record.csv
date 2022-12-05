@@ -1,1 +1,12 @@
 input_files,wave_files,start,end,fold,average_HR,Fs
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label0.npy,0,160,3,65.83333333333333,29.824965453707968
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label1.npy,160,320,3,63.666666666666664,29.824965453707968
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label2.npy,320,480,3,62.666666666666664,29.824965453707968
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label3.npy,480,640,3,61.666666666666664,29.824965453707968
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label4.npy,640,800,3,62.0,29.824965453707968
+D:\papers\Video\vipl_test\data\p1\v1\source1\nolarge_img,D:\papers\Video\vipl_test\data\p1\v1\source1\gt\160\p1_v1_source1_label5.npy,800,960,3,62.5,29.824965453707968
+D:\papers\Video\vipl_test\data\p42\v1\source2\nolarge_img,D:\papers\Video\vipl_test\data\p42\v1\source2\gt\160\p42_v1_source2_label0.npy,0,160,4,63.0,30.0
+D:\papers\Video\vipl_test\data\p42\v1\source2\nolarge_img,D:\papers\Video\vipl_test\data\p42\v1\source2\gt\160\p42_v1_source2_label1.npy,160,320,4,62.2,30.0
+D:\papers\Video\vipl_test\data\p42\v1\source2\nolarge_img,D:\papers\Video\vipl_test\data\p42\v1\source2\gt\160\p42_v1_source2_label2.npy,320,480,4,62.0,30.0
+D:\papers\Video\vipl_test\data\p42\v1\source2\nolarge_img,D:\papers\Video\vipl_test\data\p42\v1\source2\gt\160\p42_v1_source2_label3.npy,480,640,4,62.8,30.0
+D:\papers\Video\vipl_test\data\p42\v1\source2\nolarge_img,D:\papers\Video\vipl_test\data\p42\v1\source2\gt\160\p42_v1_source2_label4.npy,640,800,4,63.0,30.0

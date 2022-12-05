@@ -65,14 +65,13 @@ def facial_detection(detector, frame, larger_box=False, larger_box_size=1.0):
     if len(face_zone) < 1:
         print("Warning: No Face Detected!")
         return [0, 0, frame.shape[0], frame.shape[1]]
-    else:
-        if len(face_zone) >= 2:
-            print("Warning: More than one faces are detected(Only cropping the biggest one.)")
-        result = face_zone[0]['box']
-        result[2] += result[0]
-        result[3] += result[1]
-    h = result[3] - result[1]
-    w = result[2] - result[0]
+    if len(face_zone) >= 2:
+        print("Warning: More than one faces are detected(Only cropping the biggest one.)")
+    result = face_zone[0]['box']
+    h = result[3]
+    w = result[2]
+    result[2] += result[0]
+    result[3] += result[1]
     if larger_box:
         print("Larger Bounding Box")
         result[0] = round(max(0, result[0] + (1. - larger_box_size) / 2 * w))
