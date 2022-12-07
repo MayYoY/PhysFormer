@@ -11,7 +11,7 @@ class Accumulate:
         self.acc = [0] * n
 
     def update(self, val: list, n):
-        if isinstance(n, list):
+        if not isinstance(n, list):
             n = [n] * self.n
         self.cnt = [a + b for a, b in zip(self.cnt, n)]
         self.acc = [a + b for a, b in zip(self.acc, val)]
