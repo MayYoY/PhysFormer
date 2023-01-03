@@ -4,5 +4,5 @@ from configs import running, preprocess
 from model import loss_function, physformer
 
 
-ops = vipl_hr.FramePreprocess(preprocess.FrameTrain)
+ops = vipl_hr.FramePreprocess(preprocess.Frame160)
 ops.read_process()

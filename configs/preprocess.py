@@ -1,4 +1,4 @@
-class FrameTrain:
+class Frame160:
     input_path = ""
     record_path = "./160_record.csv"
     img_cache = ""
@@ -18,7 +18,7 @@ class FrameTrain:
     CHUNK_STRIDE = -1
 
 
-class FrameTest:
+class Frame300:
     input_path = ""
     record_path = "./300_record.csv"
     img_cache = ""

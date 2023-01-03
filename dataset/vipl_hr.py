@@ -11,9 +11,9 @@ from scipy import interpolate, io
 from torch.utils import data
 
 from . import utils
+from evaluate import postprocess
 
 
-# TODO: 本次修改了 HR 序列的读入, 会 truncate hrs or frames; 同时选择不放大脸部区域
 class FramePreprocess:
     def __init__(self, config):
         self.config = config
@@ -66,7 +66,7 @@ class FramePreprocess:
                     single_info = {"filename": filename,
                                    "fold": self.folds[int(p_idx)], "Fs": Fs}
                     # input_list, wave_list, start_list, end_list, fold_list, HR_list, Fs_list
-                    temp = self.save(frames_clips, gts_clips, hrs, single_info)
+                    temp = self.save(frames_clips, gts_clips, hrs, single_info, Fs)
                     csv_info["wave_files"] += temp[0]
                     csv_info["start"] += temp[1]
                     csv_info["end"] += temp[2]
@@ -85,7 +85,7 @@ class FramePreprocess:
         csv_info.to_csv(self.config.record_path, index=False)
 
     def save(self, frames_clips: np.array, gts_clips: np.array,
-             hrs: np.ndarray, single_info: dict):
+             hrs: np.ndarray, single_info: dict, Fs: float):
         """Saves the preprocessing data."""
         # 生成对应的文件夹
         os.makedirs(self.config.gt_cache, exist_ok=True)
@@ -93,10 +93,14 @@ class FramePreprocess:
         start_list = []  # clip 范围
         end_list = []
         HR_list = []  # 平均 HR
-        step = len(hrs) // len(gts_clips)  # 根据 clip_num 分割 HR 序列
+        # step = len(hrs) // len(gts_clips)  # 根据 clip_num 分割 HR 序列
         # 保存文件
         for i in range(len(gts_clips)):
-            HR_list.append(hrs[i * step: (i + 1) * step].mean())  # clip 的平均 HR
+            # clip 的平均 HR; gt_HR.csv 中的数据似乎不够准确
+            # HR_list.append(hrs[i * step: (i + 1) * step].mean())
+            hr = postprocess.fft_physiology(signal=gts_clips[i], Fs=Fs,
+                                            diff=False, detrend_flag=True)
+            HR_list.append(hr)
             # 保存处理好的 wave clip
             label_path = self.config.gt_cache + os.sep + f"{single_info['filename']}_label{i}.npy"
             np.save(label_path, gts_clips[i])
