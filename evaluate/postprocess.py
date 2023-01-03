@@ -1,15 +1,39 @@
 import numpy as np
 import scipy
 import scipy.io
-from scipy.signal import butter, periodogram, find_peaks
+from scipy.signal import butter, periodogram, find_peaks, firwin, lombscargle
 from scipy.sparse import spdiags
+from scipy import interpolate
+
+
+def next_power_of_2(x):
+    return 1 if x == 0 else 2 ** (x - 1).bit_length()
+
+
+def bandpass_hamming(Fs, taps_num=128, cutoff=None):
+    """
+    bandpass filtered (128-point Hamming window, 0.7–4 Hz)
+    :return:
+    """
+    if cutoff is None:
+        cutoff = [0.7, 4]
+    return firwin(numtaps=taps_num, cutoff=cutoff, window="hamming",
+                  fs=Fs, pass_zero="bandpass")
+
+
+def average_filter(wave, win_size=5):
+    """five-point moving average filter"""
+    """temp = np.zeros(len(wave) + win_size - 1)
+    temp[win_size // 2: win_size // 2 + len(wave)] = wave
+    return np.convolve(temp, np.ones(win_size) / win_size, mode="valid")"""
+    return np.convolve(wave, np.ones(win_size) / win_size, mode="same")
 
 
 def mag2db(mag):
     return 20. * np.log10(mag)
 
 
-def detrend(signal, lambda_value):
+def detrend(signal, lambda_value=100):
     """
     :param signal: T, or B x T
     :param lambda_value:
@@ -48,14 +72,6 @@ def calculate_SNR(psd, freq, gtHR, target):
     return ret
 
 
-"""def calculate_HR(pxx_pred, frange_pred, fmask_pred, pxx_label, frange_label, fmask_label):
-    pred_HR = np.take(frange_pred, np.argmax(
-        np.take(pxx_pred, fmask_pred), 0))[0] * 60
-    ground_truth_HR = np.take(frange_label, np.argmax(
-        np.take(pxx_label, fmask_label), 0))[0] * 60
-    return pred_HR, ground_truth_HR"""
-
-
 # TODO: respiration 是否需要 cumsum; 短序列心率计算不准确
 def fft_physiology(signal: np.ndarray, target="pulse", Fs=30, diff=True, detrend_flag=True):
     """
@@ -82,7 +98,8 @@ def fft_physiology(signal: np.ndarray, target="pulse", Fs=30, diff=True, detrend
     # bandpass
     signal = scipy.signal.filtfilt(b, a, np.double(signal))
     # get psd
-    freq, psd = periodogram(signal, fs=Fs, nfft=4 * signal.shape[-1], detrend=False)
+    N = next_power_of_2(signal.shape[-1])
+    freq, psd = periodogram(signal, fs=Fs, nfft=N, detrend=False)
     # get mask
     if target == "pulse":
         mask = np.argwhere((freq >= 0.75) & (freq <= 2.5))
@@ -101,7 +118,7 @@ def fft_physiology(signal: np.ndarray, target="pulse", Fs=30, diff=True, detrend
 
 def peak_physiology(signal: np.ndarray, target="pulse", Fs=30, diff=True, detrend_flag=True):
     """
-    利用 fft 计算 HR or FR
+    利用 ibi 计算 HR or FR
     get filter -> detrend -> get psd and freq -> get mask -> get HR
     :param signal: T, or B x T
     :param target: pulse or respiration
@@ -121,6 +138,8 @@ def peak_physiology(signal: np.ndarray, target="pulse", Fs=30, diff=True, detren
         [b, a] = butter(1, [0.08 / Fs * 2, 0.5 / Fs * 2], btype='bandpass')
     # bandpass
     signal = scipy.signal.filtfilt(b, a, np.double(signal))
+    T = signal.shape[-1]
+    signal = signal.reshape(-1, T)
     phys = []
     for s in signal:
         peaks, _ = find_peaks(s)

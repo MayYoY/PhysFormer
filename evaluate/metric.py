@@ -13,8 +13,6 @@ class Accumulate:
     def update(self, val: list, n):
         if not isinstance(n, list):
             n = [n] * self.n
-        if not isinstance(val, list):
-            val = [val] * self.n
         self.cnt = [a + b for a, b in zip(self.cnt, n)]
         self.acc = [a + b for a, b in zip(self.acc, val)]
 
@@ -32,17 +30,25 @@ def cal_metric(pred_phys: np.ndarray, label_phys: np.ndarray,
     :return: MAE, RMSE, MAPE, R
     """
     if methods is None:
-        methods = ["MAE", "RMSE", "MAPE", "R"]
+        methods = ["Mean", "Std", "MAE", "RMSE", "MAPE", "R"]
     pred_phys = pred_phys.reshape(-1)
     label_phys = label_phys.reshape(-1)
     ret = [] * len(methods)
     for m in methods:
-        if m == "MAE":
+        if m == "Mean":
+            ret.append((pred_phys - label_phys).mean())
+        elif m == "Std":
+            ret.append((pred_phys - label_phys).std())
+        elif m == "MAE":
             ret.append(np.abs(pred_phys - label_phys).mean())
         elif m == "RMSE":
             ret.append(np.sqrt((np.square(pred_phys - label_phys)).mean()))
         elif m == "MAPE":
             ret.append((np.abs((pred_phys - label_phys) / label_phys)).mean() * 100)
         elif m == "R":
-            ret.append(np.corrcoef(pred_phys, label_phys)[0, 1])
+            temp = np.corrcoef(pred_phys, label_phys)
+            if np.isnan(temp).any() or np.isinf(temp).any():
+                ret.append(-1 * np.ones(1))
+            else:
+                ret.append(temp[0, 1])
     return ret

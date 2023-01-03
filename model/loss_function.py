@@ -21,8 +21,11 @@ class NegPearson(nn.Module):
         sum_x2 = torch.sum(preds ** 2, dim=1)
         sum_y2 = torch.sum(labels ** 2, dim=1)
         T = preds.shape[1]
-        loss = 1 - ((T * sum_xy - sum_x * sum_y) / (
-            torch.sqrt((T * sum_x2 - sum_x ** 2) * (T * sum_y2 - sum_y ** 2))))
+        # 防止对负数开根号
+        denominator = (T * sum_x2 - sum_x ** 2) * (T * sum_y2 - sum_y ** 2)
+        for i in range(len(denominator)):
+            denominator[i] = max(denominator[i], 1e-8)
+        loss = 1 - ((T * sum_xy - sum_x * sum_y) / (torch.sqrt(denominator)) + 1e-8)
         if self.reduction == "mean":
             loss = loss.mean()
         elif self.reduction == "sum":
@@ -30,7 +33,7 @@ class NegPearson(nn.Module):
         return loss
 
 
-def normal_sampling(mean, label_k, std):
+def normal_sampling(mean, label_k, std=1.0):
     """
     \frac{1}{\sqrt{2\pi} * \sigma} * \exp(-\frac{(x - \mu)^2}{2 * \sigma^2})
     :param mean:
@@ -93,16 +96,19 @@ class FreqLoss(nn.Module):
         complex_absolute = torch.sum(preds * torch.sin(k * temp), dim=-1) ** 2 \
                            + torch.sum(preds * torch.cos(k * temp), dim=-1) ** 2
         # 归一化
-        norm_t = (torch.ones(B, device=wave.device) / torch.sum(complex_absolute, dim=1))
+        norm_t = torch.ones(B, device=wave.device) / (torch.sum(complex_absolute, dim=1) + 1e-8)
         norm_t = norm_t.view(-1, 1)  # B x 1
         complex_absolute = complex_absolute * norm_t  # B x range
         # 平移区间 [40, 180] -> [0, 140]
         gts = labels.clone()
         gts -= self.low_bound
+        gts[gts.le(0)] = 0
+        gts[gts.ge(139)] = 139
         gts = gts.type(torch.long).view(B)
 
         # 预测心率
-        whole_max_val, whole_max_idx = complex_absolute.max(1)
+        _, whole_max_idx = complex_absolute.max(1)
+        print(whole_max_idx + 40)
         freq_loss = self.cross_entropy(complex_absolute, gts)
 
         # KL loss

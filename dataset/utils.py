@@ -4,9 +4,6 @@ import cv2 as cv
 from mtcnn import MTCNN
 from math import ceil
 
-import torch
-from torch.utils import data
-
 
 def resize(frames, dynamic_det, det_length,
            w, h, larger_box, crop_face, larger_box_size):
@@ -21,7 +18,7 @@ def resize(frames, dynamic_det, det_length,
     :param larger_box_size:
     """
     if dynamic_det:
-        det_num = ceil(frames.shape[0] / det_length)  # 检测次数
+        det_num = ceil(len(frames) / det_length)  # 检测次数
     else:
         det_num = 1
     face_region = []
@@ -34,10 +31,11 @@ def resize(frames, dynamic_det, det_length,
         else:  # 不截取
             face_region.append([0, 0, frames.shape[1], frames.shape[2]])
     face_region_all = np.asarray(face_region, dtype='int')
-    resize_frames = np.zeros((frames.shape[0], h, w, 3))  # T x H x W x 3
+    # resize_frames = np.zeros((frames.shape[0], h, w, 3))  # T x H x W x 3
+    resize_frames = []
 
     # 截取人脸并 resize
-    for i in range(0, frames.shape[0]):
+    for i in range(len(frames)):
         frame = frames[i]
         # 选定人脸区域
         if dynamic_det:
@@ -48,9 +46,15 @@ def resize(frames, dynamic_det, det_length,
             face_region = face_region_all[reference_index]
             frame = frame[max(face_region[1], 0):min(face_region[3], frame.shape[0]),
                           max(face_region[0], 0):min(face_region[2], frame.shape[1])]
-        resize_frames[i] = cv.resize(frame, (w + 4, h + 4),
-                                     interpolation=cv.INTER_CUBIC)[2: w + 2, 2: h + 2, :]
-    return resize_frames
+        if w > 0 and h > 0:
+            resize_frames.append(cv.resize(frame, (w + 4, h + 4),
+                                           interpolation=cv.INTER_CUBIC)[2: w + 2, 2: h + 2, :])
+        else:
+            resize_frames.append(frame)
+    if w > 0 and h > 0:
+        return np.asarray(resize_frames)
+    else:  # list
+        return resize_frames
 
 
 def facial_detection(detector, frame, larger_box=False, larger_box_size=1.0):

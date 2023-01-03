@@ -14,23 +14,25 @@ class ViT_ST_ST_Compact3_TDC_gra_sharp(nn.Module):
 
     def __init__(
             self,
-            image_size,
-            patches: int = 16,
-            dim: int = 768,
-            ff_dim: int = 3072,
-            num_heads: int = 12,
+            image_size = None,
+            patches: int = 4,
+            dim: int = 96,
+            ff_dim: int = 144,
+            num_heads: int = 4,
             num_layers: int = 12,
-            dropout_rate: float = 0.2,
+            dropout_rate: float = 0.1,
             T: int = 160,
-            theta: float = 0.2
+            theta: float = 0.7
     ):
         super().__init__()
         self.T = T
         self.dim = dim
 
         # Image and patch sizes
-        t, h, w = as_tuple(image_size)  # tube sizes
+        # t, h, w = as_tuple(image_size)  # tube sizes
         ft, fh, fw = as_tuple(patches)  # patch sizes, ft = 4 ==> 160/4=40
+        # gt, gh, gw = t // ft, h // fh, w // fw  # number of patches
+        # seq_len = gh * gw * gt
 
         # Patch embedding    [4x16x16]conv
         self.patch_embedding = nn.Conv3d(dim, dim, kernel_size=(ft, fh, fw), stride=(ft, fh, fw))
